@@ -49,10 +49,15 @@ jobs:
           fi
 
           echo "CSC_ID=$CSC_ID" >> "$GITHUB_ENV"
-          echo "Resolved CSC_ID for VENUE=$VENUE"
+          echo "Resolved CSC_ID=$CSC_ID for VENUE=$VENUE"
 
       - name: Run Playwright tests
-        run: CSC_ID="$CSC_ID" npx playwright test
+        # We inject the resolved environment variables here along with the global CI indicator
+        env:
+          CSC_ID: ${{ env.CSC_ID }}
+          CI: true
+        # Adding --headless forces it to override any local configuration files
+        run: npx playwright test --headless
 
       - name: Upload Playwright HTML report
         if: always()
