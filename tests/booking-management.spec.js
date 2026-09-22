@@ -44,9 +44,14 @@ async function bookAnyEvent(page) {
 
   await page.waitForSelector('.booking-ref');
   const bookingRef = (await page.locator('.booking-ref').textContent())?.trim();
-  const bookingUrl = page.url();
+  await page.goto(`${BASE_URL}/bookings`);
+  await page.waitForURL(/\/bookings$/);
+  const bookingCard = page.locator('#booking-card').filter({ hasText: bookingRef }).first();
+  const bookingDetailUrl = await bookingCard
+    .getByRole('link', { name: 'View Details' })
+    .getAttribute('href');
 
-  return { bookingRef, bookingUrl };
+  return { bookingRef, bookingDetailUrl };
 }
 
 test.describe('Booking management', () => {
@@ -56,20 +61,17 @@ test.describe('Booking management', () => {
     const booking = await bookAnyEvent(page);
     expect(booking.bookingRef).toMatch(/^[A-Z]-[A-Z0-9]{6}$/);
 
-    await page.getByRole('link', { name: 'View My Bookings' }).click();
-    await page.waitForURL(/\/bookings$/);
     await expect(page.getByText(booking.bookingRef)).toBeVisible();
   });
 
   test('user cannot access another user booking', async ({ page }) => {
     await login(page, USER_A_EMAIL, USER_A_PASSWORD);
     const booking = await bookAnyEvent(page);
-    const bookingId = booking.bookingUrl.split('/').at(-1);
 
     await logout(page);
     await login(page, USER_B_EMAIL, USER_B_PASSWORD);
 
-    await page.goto(`${BASE_URL}/bookings/${bookingId}`);
+    await page.goto(`${BASE_URL}${booking.bookingDetailUrl}`);
     await expect(page.getByText('Access Denied')).toBeVisible();
     await expect(page.getByText('You are not authorized to view this booking.')).toBeVisible();
   });
