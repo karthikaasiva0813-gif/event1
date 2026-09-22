@@ -52,12 +52,11 @@ jobs:
           echo "Resolved CSC_ID=$CSC_ID for VENUE=$VENUE"
 
       - name: Run Playwright tests
-        # Injects the dynamic variables along with the CI environment flag
         env:
           CSC_ID: ${{ env.CSC_ID }}
           CI: true
-        # Removed the invalid '--headless' option so it executes successfully
-        run: npx playwright test
+        # xvfb-run provides a virtual monitor display to execute headed runs successfully
+        run: xvfb-run npx playwright test
 
       - name: Upload Playwright HTML report
         if: always()
