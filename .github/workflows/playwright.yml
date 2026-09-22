@@ -52,12 +52,12 @@ jobs:
           echo "Resolved CSC_ID=$CSC_ID for VENUE=$VENUE"
 
       - name: Run Playwright tests
-        # We inject the resolved environment variables here along with the global CI indicator
+        # Injects the dynamic variables along with the CI environment flag
         env:
           CSC_ID: ${{ env.CSC_ID }}
           CI: true
-        # Adding --headless forces it to override any local configuration files
-        run: npx playwright test --headless
+        # Removed the invalid '--headless' option so it executes successfully
+        run: npx playwright test
 
       - name: Upload Playwright HTML report
         if: always()
