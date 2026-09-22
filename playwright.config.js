@@ -10,7 +10,7 @@ module.exports = defineConfig({
   },
   reporter: 'html',
   use: {
-    browserName: 'chromium',
+    headless: process.env.CI ? true : false,
     headless:false,
     screenshot: 'on',
     trace: 'on'
