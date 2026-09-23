@@ -75,4 +75,36 @@ test.describe('Booking management', () => {
     await expect(page.getByText('Access Denied')).toBeVisible();
     await expect(page.getByText('You are not authorized to view this booking.')).toBeVisible();
   });
+
+  test('user can check refund eligibility for a single-ticket booking', async ({ page }) => {
+    await login(page, USER_A_EMAIL, USER_A_PASSWORD);
+    const booking = await bookAnyEvent(page);
+
+    await page.goto(`${BASE_URL}${booking.bookingDetailUrl}`);
+    await expect(page.locator('#check-refund-btn')).toBeVisible();
+    await page.locator('#check-refund-btn').click();
+
+    await expect(page.locator('#refund-spinner')).toBeVisible();
+    await expect(page.locator('#refund-result')).toContainText(
+      'Single-ticket bookings qualify for a full refund',
+      { timeout: 6000 },
+    );
+  });
+
+  test('user can cancel an individual booking', async ({ page }) => {
+    await login(page, USER_A_EMAIL, USER_A_PASSWORD);
+    const booking = await bookAnyEvent(page);
+
+    await page.goto(`${BASE_URL}${booking.bookingDetailUrl}`);
+    const cancelButton = page.getByRole('button', { name: /Cancel|Delete/i });
+    await expect(cancelButton).toBeVisible();
+
+    await cancelButton.click();
+    await expect(page.getByRole('dialog', { name: 'Cancel this booking?' })).toBeVisible();
+    await page.getByRole('dialog', { name: 'Cancel this booking?' })
+      .getByRole('button', { name: 'Yes, cancel it' })
+      .click();
+    await page.waitForURL(/\/bookings$/);
+    await expect(page.getByText(booking.bookingRef)).not.toBeVisible();
+  });
 });
